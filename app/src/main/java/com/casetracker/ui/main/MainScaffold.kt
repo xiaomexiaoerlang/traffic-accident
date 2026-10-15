@@ -1,5 +1,10 @@
 package com.casetracker.ui.main
-
+import android.app.Activity
+import androidx.activity.compose.BackHandler
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
@@ -59,31 +64,33 @@ fun MainScaffold(
     onCreateCase: () -> Unit,
     onEditCase: (Long) -> Unit
 ) {
+var showExitDialog by remember { mutableStateOf(false) }
+val context = LocalContext.current
+
+// 当按下返回键时触发
+BackHandler {
+    showExitDialog = true
+}
+
+// 退出提示弹窗
+if (showExitDialog) {
+    AlertDialog(
+        onDismissRequest = { showExitDialog = false },
+        title = { Text("退出应用") },
+        text = { Text("确定要退出交通事故进度追踪吗？") },
+        confirmButton = {
+            Button(onClick = {
+                showExitDialog = false
+                (context as? Activity)?.finish() // 关闭 App
+            }) { Text("确定") }
+        },
+        dismissButton = {
+            Button(onClick = { showExitDialog = false }) { Text("取消") }
+        }
+    )
+}
     val pagerState = rememberPagerState(pageCount = { TABS.size })
     val scope = rememberCoroutineScope()
-    var showExitDialog by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-
-    // 主界面拦截返回键，弹出退出确认
-    BackHandler(enabled = true) { showExitDialog = true }
-
-    if (showExitDialog) {
-        AlertDialog(
-            onDismissRequest = { showExitDialog = false },
-            title = { Text("退出应用") },
-            text = { Text("是否退出案件跟进？") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showExitDialog = false
-                    (context as? android.app.Activity)?.finishAffinity()
-                }) { Text("退出") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showExitDialog = false }) { Text("取消") }
-            }
-        )
-    }
-
     Column(modifier = Modifier.fillMaxSize()) {
         HorizontalPager(
             state = pagerState,
