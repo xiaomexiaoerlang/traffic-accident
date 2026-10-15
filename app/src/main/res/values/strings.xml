@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">案件跟进</string>
+    <string name="nav_home">首页</string>
+    <string name="nav_stats">统计</string>
+    <string name="case_type_accident">交通事故</string>
+    <string name="case_type_violation">违法行为</string>
+    <string name="status_pending">待受理</string>
+    <string name="status_investigating">调查中</string>
+    <string name="status_in_progress">处理中</string>
+    <string name="status_review">审核中</string>
+    <string name="status_closed">已结案</string>
+    <string name="btn_new_case">新建案件</string>
+    <string name="btn_save">保存</string>
+    <string name="btn_cancel">取消</string>
+    <string name="btn_add_event">添加事件</string>
+    <string name="btn_advance_status">推进状态</string>
+    <string name="hint_case_number">案号</string>
+    <string name="hint_case_title">案件简述</string>
+    <string name="hint_parties">当事人（多人用逗号分隔）</string>
+    <string name="hint_location">事发地点</string>
+    <string name="hint_description">案件详情</string>
+    <string name="hint_event_title">事件标题</string>
+    <string name="hint_event_desc">事件描述</string>
+    <string name="label_deadline">法定截止</string>
+    <string name="label_progress">进度</string>
+    <string name="label_timeline">处理时间线</string>
+    <string name="label_overdue">已超期</string>
+    <string name="label_days_remaining">剩余 %1$d 天</string>
+    <string name="empty_cases">暂无案件，点击右下角新建</string>
+</resources>
