@@ -10,12 +10,14 @@ import androidx.navigation.navArgument
 import com.casetracker.ui.detail.CaseDetailScreen
 import com.casetracker.ui.edit.CaseEditScreen
 import com.casetracker.ui.main.MainScaffold
+import com.casetracker.ui.overview.OverviewScreen
 
 object Routes {
     const val MAIN = "main"
     const val DETAIL = "detail/{caseId}"
     const val EDIT = "edit?caseId={caseId}"
     const val CREATE = "edit"
+    const val OVERVIEW = "overview"
 
     fun detail(caseId: Long) = "detail/$caseId"
     fun edit(caseId: Long?) = if (caseId != null) "edit?caseId=$caseId" else "edit"
@@ -29,7 +31,14 @@ fun AppNavigation() {
             MainScaffold(
                 onOpenCase = { id -> navController.navigate(Routes.detail(id)) },
                 onCreateCase = { navController.navigate(Routes.CREATE) },
-                onEditCase = { id -> navController.navigate(Routes.edit(id)) }
+                onEditCase = { id -> navController.navigate(Routes.edit(id)) },
+                onOpenOverview = { navController.navigate(Routes.OVERVIEW) }
+            )
+        }
+        composable(Routes.OVERVIEW) {
+            OverviewScreen(
+                onBack = { navController.popBackStack() },
+                onOpenCase = { id -> navController.navigate(Routes.detail(id)) }
             )
         }
         composable(

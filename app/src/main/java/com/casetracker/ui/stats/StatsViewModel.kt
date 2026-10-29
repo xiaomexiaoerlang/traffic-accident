@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.casetracker.data.repository.CaseRepository
 import com.casetracker.domain.model.Case
 import com.casetracker.domain.model.CaseStatus
+import com.casetracker.domain.model.CaseType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -58,7 +59,12 @@ class StatsViewModel @Inject constructor(
                 val now = System.currentTimeMillis()
                 val dayMs = 24 * 60 * 60 * 1000L
                 val statusCounts = CaseStatus.entries.associateWith { status ->
-                    cases.count { it.status == status }
+                    // v1.80 事故不再有待受案：历史事故若为 PENDING_ACCEPTANCE 归入「处理中」
+                    cases.count { c ->
+                        val effective = if (c.caseType == CaseType.ACCIDENT &&
+                            c.status == CaseStatus.PENDING_ACCEPTANCE) CaseStatus.IN_PROGRESS else c.status
+                        effective == status
+                    }
                 }
                 val overdue = cases.count { it.isOverdue(now) }
                 val closed = cases.count { it.status == CaseStatus.CLOSED }

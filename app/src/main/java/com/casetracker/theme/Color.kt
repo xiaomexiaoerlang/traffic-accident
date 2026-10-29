@@ -36,3 +36,10 @@ val SuccessColor = Color(0xFF00C853)
 val WarningColor = Color(0xFFFF9800)
 val DangerColor = Color(0xFFF44336)
 val InfoColor = Color(0xFF2196F3)
+
+// v1.66 左滑操作按钮：与软件主题协调（编辑/详情=主题蓝、删除/移除=绿色系）
+val EditBlue = Color(0xFF1B7AE8)
+val DeleteRed = Color(0xFF00A656)
+
+// v1.66 法规搜索命中高亮：字体浅黄色加粗（无底色），与正文明显区别
+val HighlightYellowText = Color(0xFFD9A700)

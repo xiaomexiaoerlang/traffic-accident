@@ -10,6 +10,8 @@ import androidx.lifecycle.viewModelScope
 import com.casetracker.data.SettingsManager
 import com.casetracker.data.repository.CaseRepository
 import com.casetracker.domain.model.Case
+import com.casetracker.domain.model.CaseStatus
+import com.casetracker.domain.model.CaseType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -27,10 +29,11 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val themeMode: SettingsManager.ThemeMode = SettingsManager.ThemeMode.SYSTEM,
+    val hapticsEnabled: Boolean = true,
     val versionName: String = "v${com.casetracker.BuildConfig.VERSION_NAME} (${com.casetracker.BuildConfig.VERSION_CODE})",
     val showThemeDialog: Boolean = false,
     val showClearConfirm: Boolean = false,
-    val showLegalDialog: Boolean = false,
+    val importing: Boolean = false,
     val message: String? = null,
 )
 
@@ -38,12 +41,12 @@ sealed interface SettingsUiEvent {
     data object OpenThemeDialog : SettingsUiEvent
     data object DismissThemeDialog : SettingsUiEvent
     data class SetThemeMode(val mode: SettingsManager.ThemeMode) : SettingsUiEvent
+    data class ToggleHaptics(val enabled: Boolean) : SettingsUiEvent
     data object OpenClearConfirm : SettingsUiEvent
     data object DismissClearConfirm : SettingsUiEvent
     data object ClearAll : SettingsUiEvent
-    data object ShowLegal : SettingsUiEvent
-    data object DismissLegal : SettingsUiEvent
     data object ExportCsv : SettingsUiEvent
+    data class ImportLedger(val uri: android.net.Uri) : SettingsUiEvent
     data object ConsumeMessage : SettingsUiEvent
 }
 
@@ -62,6 +65,11 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(themeMode = mode)
             }
         }
+        viewModelScope.launch {
+            SettingsManager.hapticsEnabled.collect { enabled ->
+                _uiState.value = _uiState.value.copy(hapticsEnabled = enabled)
+            }
+        }
     }
 
     fun onEvent(event: SettingsUiEvent) {
@@ -74,16 +82,15 @@ class SettingsViewModel @Inject constructor(
                 SettingsManager.setThemeMode(appContext, event.mode)
                 _uiState.value = _uiState.value.copy(showThemeDialog = false)
             }
+            is SettingsUiEvent.ToggleHaptics ->
+                SettingsManager.setHapticsEnabled(appContext, event.enabled)
             is SettingsUiEvent.OpenClearConfirm ->
                 _uiState.value = _uiState.value.copy(showClearConfirm = true)
             is SettingsUiEvent.DismissClearConfirm ->
                 _uiState.value = _uiState.value.copy(showClearConfirm = false)
             is SettingsUiEvent.ClearAll -> clearAll()
-            is SettingsUiEvent.ShowLegal ->
-                _uiState.value = _uiState.value.copy(showLegalDialog = true)
-            is SettingsUiEvent.DismissLegal ->
-                _uiState.value = _uiState.value.copy(showLegalDialog = false)
             is SettingsUiEvent.ExportCsv -> exportCsv()
+            is SettingsUiEvent.ImportLedger -> importLedger(event.uri)
             is SettingsUiEvent.ConsumeMessage ->
                 _uiState.value = _uiState.value.copy(message = null)
         }
@@ -102,18 +109,48 @@ class SettingsViewModel @Inject constructor(
     private fun exportCsv() {
         viewModelScope.launch {
             val cases = repository.getAllCases().first()
-            val result = withContext(Dispatchers.IO) { writeCsv(appContext, cases) }
+            val registered = repository.getRegisteredCaseIds().first()
+            val result = withContext(Dispatchers.IO) { writeCsv(appContext, cases, registered) }
             _uiState.value = _uiState.value.copy(
                 message = if (result.isBlank()) "导出失败" else "已导出：$result"
             )
         }
     }
 
-    private fun writeCsv(context: Context, cases: List<Case>): String {
-        val header = "事故编号,事故日期,事故时间,事故类型,处理程序,事故地点,处理单位,办案民警,本方当事人,对方当事人,是否逃逸,鉴定延期,状态,进度(%)"
+    /** v1.85 事故台账批量导入：解析 .xlsx → 生成已认定事故 */
+    private fun importLedger(uri: android.net.Uri) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(importing = true)
+            val result = withContext(Dispatchers.IO) {
+                try {
+                    val rows = appContext.contentResolver.openInputStream(uri)?.use { stream ->
+                        com.casetracker.data.importer.AccidentLedgerImporter.parse(stream)
+                    } ?: emptyList()
+                    if (rows.isEmpty()) {
+                        "未识别到有效台账数据（需含事故时间列）"
+                    } else {
+                        val (imported, skipped) = repository.importAccidentLedger(rows)
+                        "导入完成：成功 $imported 条，跳过重复 $skipped 条"
+                    }
+                } catch (e: Exception) {
+                    "导入失败：${e.message ?: "文件解析错误"}"
+                }
+            }
+            _uiState.value = _uiState.value.copy(importing = false, message = result)
+        }
+    }
+
+    private fun writeCsv(context: Context, cases: List<Case>, registered: Set<Long>): String {
+        val header = "事故编号,事故日期,事故时间,事故类型,处理程序,事故地点,处理单位,办案民警,本方当事人,对方当事人,伤情情况,是否逃逸,鉴定延期,状态,进度(%)"
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val sb = StringBuilder(header)
         cases.forEach { c ->
+            // 状态跟随流程：事故 v1.74 去除受案登记后恒为处理中；违法按受案登记状态
+            val statusText = when {
+                c.status == CaseStatus.CLOSED -> "已认定"
+                c.caseType == CaseType.ACCIDENT || c.id in registered -> "处理中"
+                else -> "待受案"
+            }
             sb.append('\n').append(
                 listOf(
                     c.caseNumber,
@@ -126,9 +163,10 @@ class SettingsViewModel @Inject constructor(
                     c.handlingOfficer,
                     c.selfParty,
                     c.otherParty,
+                    c.injuryDetail,
                     if (c.hitAndRun) "是" else "否",
                     if (c.appraisalExtended) "是" else "否",
-                    c.status.displayName,
+                    statusText,
                     c.progress.toString()
                 ).map { it.replace(",", "，") }.joinToString(",")
             )
@@ -163,15 +201,3 @@ class SettingsViewModel @Inject constructor(
     companion object {
     }
 }
-
-/** 法律依据文本 */
-val LEGAL_BASIS: List<Pair<String, String>> = listOf(
-    "《道路交通安全法》第73条" to "公安机关交通管理部门应当根据交通事故现场勘验、检查、调查情况和有关的检验、鉴定结论，及时制作交通事故认定书，作为处理交通事故的证据。",
-    "《道路交通事故处理程序规定》第29条" to "交通肇事逃逸案件尚未侦破的，受害方书面要求出具道路交通事故认定书的，公安机关交通管理部门应当在接到书面要求后十日内制作道路交通事故认定书。",
-    "《道路交通事故处理程序规定》第30条" to "对经过勘验、检查的交通事故现场，公安机关交通管理部门应当自勘查现场之日起五日内制作道路交通事故认定书。",
-    "《道路交通事故处理程序规定》第37条" to "公安机关交通管理部门应当自现场调查之日起五日内指派或者委托专业技术人员、具备资格的鉴定机构进行检验、鉴定。",
-    "《道路交通事故处理程序规定》第38条" to "检验、鉴定应当在二十日内完成；需要延期的，经设区的市公安机关交通管理部门批准可以延长二十日。",
-    "《道路交通事故处理程序规定》第43条" to "公安机关交通管理部门应当自制作道路交通事故认定书之日起三日内送达当事人。",
-    "《道路交通事故处理程序规定》第51条" to "当事人对道路交通事故认定有异议的，可以自道路交通事故认定书送达之日起三日内，向作出道路交通事故认定的公安机关交通管理部门提出书面复核申请。",
-    "《道路交通事故处理程序规定》第53条" to "上一级公安机关交通管理部门收到当事人书面复核申请后，应当自受理之日起三十日内作出复核结论。"
-)

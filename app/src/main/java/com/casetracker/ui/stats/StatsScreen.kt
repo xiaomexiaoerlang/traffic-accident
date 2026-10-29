@@ -134,7 +134,12 @@ fun StatsScreen(
                             val ratio = if (uiState.totalCount > 0) count.toFloat() / uiState.totalCount else 0f
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = status.displayName,
+                                    // 状态跟随流程：已认定 / 待受案 / 处理中（旧中间状态数据归入处理中）
+                                    text = when (status) {
+                                        CaseStatus.CLOSED -> "已认定"
+                                        CaseStatus.PENDING_ACCEPTANCE -> "待受案"
+                                        else -> "处理中"
+                                    },
                                     style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier.width(64.dp)
                                 )

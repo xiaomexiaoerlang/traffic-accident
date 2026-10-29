@@ -48,7 +48,7 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun MiuiTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -73,6 +73,7 @@ fun MiuiTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = MiuiTypography,
+        shapes = MiuiShapes,
         content = content
     )
 }

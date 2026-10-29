@@ -31,7 +31,18 @@ fun CaseEntity.toDomain(): Case = Case(
     appraisalExtended = appraisalExtended,
     handlingOfficer = handlingOfficer,
     selfParty = selfParty,
-    otherParty = otherParty
+    otherParty = otherParty,
+    flowArchived = flowArchived,
+    injuryDetail = injuryDetail,
+    flowSkipInvestigation = flowSkipInvestigation,
+    flowQuickProcess = flowQuickProcess,
+    violationType = if (violationType.isBlank()) com.casetracker.domain.model.ViolationType.ADMINISTRATIVE
+                    else com.casetracker.domain.model.ViolationType.valueOf(violationType),
+    responsibility = responsibility,
+    responsibilities = responsibilities,
+    vehicleSeized = vehicleSeized,
+    vehicleReturned = vehicleReturned,
+    violationHandled = violationHandled
 )
 
 fun Case.toEntity(now: Long): CaseEntity = CaseEntity(
@@ -56,7 +67,17 @@ fun Case.toEntity(now: Long): CaseEntity = CaseEntity(
     appraisalExtended = appraisalExtended,
     handlingOfficer = handlingOfficer,
     selfParty = selfParty,
-    otherParty = otherParty
+    otherParty = otherParty,
+    flowArchived = flowArchived,
+    injuryDetail = injuryDetail,
+    flowSkipInvestigation = flowSkipInvestigation,
+    flowQuickProcess = flowQuickProcess,
+    violationType = violationType.name,
+    responsibility = responsibility,
+    responsibilities = responsibilities,
+    vehicleSeized = vehicleSeized,
+    vehicleReturned = vehicleReturned,
+    violationHandled = violationHandled
 )
 
 fun CaseEventEntity.toDomain(): CaseEvent = CaseEvent(
@@ -70,7 +91,8 @@ fun CaseEventEntity.toDomain(): CaseEvent = CaseEvent(
     nodeCode = nodeCode,
     expectedDate = expectedDate,
     isAuto = isAuto,
-    isRequired = isRequired
+    isRequired = isRequired,
+    manualOverride = manualOverride
 )
 
 fun CaseEvent.toEntity(caseId: Long, now: Long): CaseEventEntity = CaseEventEntity(
@@ -85,5 +107,6 @@ fun CaseEvent.toEntity(caseId: Long, now: Long): CaseEventEntity = CaseEventEnti
     nodeCode = nodeCode,
     expectedDate = expectedDate,
     isAuto = isAuto,
-    isRequired = isRequired
+    isRequired = isRequired,
+    manualOverride = manualOverride
 )

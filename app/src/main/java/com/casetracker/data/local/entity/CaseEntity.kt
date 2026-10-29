@@ -29,4 +29,16 @@ data class CaseEntity(
     @ColumnInfo(name = "handling_officer") val handlingOfficer: String = "",
     @ColumnInfo(name = "self_party") val selfParty: String = "",
     @ColumnInfo(name = "other_party") val otherParty: String = "",
+    @ColumnInfo(name = "flow_archived") val flowArchived: Boolean = false,
+    @ColumnInfo(name = "injury_detail") val injuryDetail: String = "",
+    @ColumnInfo(name = "flow_skip_investigation") val flowSkipInvestigation: Boolean = false,
+    @ColumnInfo(name = "flow_quick_process") val flowQuickProcess: Boolean = false,
+    @ColumnInfo(name = "violation_type") val violationType: String = "ADMINISTRATIVE", // ADMINISTRATIVE/CRIMINAL
+    // ===== 年度总览专项字段（v1.69）=====
+    @ColumnInfo(name = "responsibility") val responsibility: String = "",
+    // v1.70：按当事人责任划分 JSON（认定书出具后录入）
+    @ColumnInfo(name = "responsibilities") val responsibilities: String = "",
+    @ColumnInfo(name = "vehicle_seized") val vehicleSeized: Boolean = false,
+    @ColumnInfo(name = "vehicle_returned") val vehicleReturned: Boolean = false,
+    @ColumnInfo(name = "violation_handled") val violationHandled: Boolean = false,
 )

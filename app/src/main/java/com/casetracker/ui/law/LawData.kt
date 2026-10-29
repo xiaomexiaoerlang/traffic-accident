@@ -7,6 +7,13 @@ data class LawArticle(
     val content: String      // 条文原文
 )
 
+/** 章节范围（用于详情页按章分组展示；from/to 为条文条号数字，如 第一章 总则 1~7） */
+data class LawChapterRange(
+    val name: String,   // 章名，如"第一章 总则"
+    val from: Int,      // 起始条号数字
+    val to: Int         // 结束条号数字
+)
+
 /** 一部法规 */
 data class LawBook(
     val id: String,
@@ -14,8 +21,37 @@ data class LawBook(
     val articlesCount: Int,
     val chapters: Int,
     val intro: String,
-    val articles: List<LawArticle>
+    val articles: List<LawArticle>,
+    // 章节范围映射（可选）：非空时详情页按章分组、条文默认收起点击展开
+    val chaptersData: List<LawChapterRange> = emptyList()
 )
+
+/** 中文条号转数字：如"第一百二十四条"→124、"第十条"→10；无法解析返回 0 */
+fun chineseArticleNoToInt(no: String): Int {
+    var text = no
+        .removePrefix("第")
+        .removeSuffix("条")
+        .trim()
+    if (text.isBlank()) return 0
+    val digits = "零一二三四五六七八九"
+    val units = mapOf('十' to 10, '百' to 100, '千' to 1000)
+    var total = 0
+    var section = 0
+    for (ch in text) {
+        when {
+            ch in units -> {
+                section = if (section == 0) 1 else section
+                total += section * (units[ch] ?: 0)
+                section = 0
+            }
+            ch in digits -> {
+                section = section * 10 + digits.indexOf(ch)
+            }
+            else -> return 0
+        }
+    }
+    return total + section
+}
 
 /**
  * 法律法规库（道路交通事故处理相关）。

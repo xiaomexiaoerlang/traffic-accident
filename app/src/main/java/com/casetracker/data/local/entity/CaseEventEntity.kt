@@ -30,4 +30,5 @@ data class CaseEventEntity(
     @ColumnInfo(name = "expected_date") val expectedDate: Long = 0L,  // 预计日期（自动计算）
     @ColumnInfo(name = "is_auto") val isAuto: Boolean = false,        // 是否自动计算
     @ColumnInfo(name = "is_required") val isRequired: Boolean = false,
+    @ColumnInfo(name = "manual_override") val manualOverride: Boolean = false, // 用户手动设定过日期（自动顺延不覆盖）
 )

@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
@@ -17,7 +18,11 @@ import javax.inject.Inject
 data class SearchUiState(
     val query: String = "",
     val results: List<Case> = emptyList(),
-    val isSearching: Boolean = false
+    val isSearching: Boolean = false,
+    /** 已完成受案登记的案件 id 集合（v1.74 事故已去除受案登记，仅违法 VR 用于卡片状态） */
+    val registeredCaseIds: Set<Long> = emptySet(),
+    /** 已完成违法受案登记（VR）的案件 id 集合 */
+    val violationRegisteredCaseIds: Set<Long> = emptySet()
 )
 
 @HiltViewModel
@@ -43,9 +48,13 @@ class SearchViewModel @Inject constructor(
                 }
                 .onStart { _uiState.value = _uiState.value.copy(isSearching = true) }
                 .collect { results ->
+                    val registered = repository.getRegisteredCaseIds().first()
+                    val vioRegistered = repository.getViolationRegisteredCaseIds().first()
                     _uiState.value = _uiState.value.copy(
                         results = results,
-                        isSearching = false
+                        isSearching = false,
+                        registeredCaseIds = registered,
+                        violationRegisteredCaseIds = vioRegistered
                     )
                 }
         }

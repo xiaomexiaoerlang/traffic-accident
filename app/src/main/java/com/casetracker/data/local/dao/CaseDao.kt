@@ -32,6 +32,26 @@ interface CaseDao {
     @Query("UPDATE cases SET status = :status, progress = :progress, updated_at = :updatedAt WHERE id = :id")
     suspend fun updateStatus(id: Long, status: String, progress: Int, updatedAt: Long)
 
+    /** 归档事故流程：仅隐藏「事故」Tab 中的流程卡片，案件记录保留 */
+    @Query("UPDATE cases SET flow_archived = 1, updated_at = :now WHERE id = :id")
+    suspend fun archiveFlow(id: Long, now: Long)
+
+    /** 免鉴定快捷出证：跳过 鉴定委托/鉴定报告出具/鉴定报告送达/事故调查报告 */
+    @Query("UPDATE cases SET flow_skip_investigation = 1, updated_at = :now WHERE id = :id")
+    suspend fun setSkipInvestigation(id: Long, now: Long)
+
+    /** 一般程序快速处理：提交《快速处理申请书》，跳过 鉴定相关与事故调查报告 */
+    @Query("UPDATE cases SET flow_quick_process = 1, updated_at = :now WHERE id = :id")
+    suspend fun setQuickProcess(id: Long, now: Long)
+
+    /** v1.67 修改鉴定选择：按参数重设 免鉴定 / 快速处理 标记（可改回主线） */
+    @Query("UPDATE cases SET flow_skip_investigation = :skip, flow_quick_process = :quick, updated_at = :now WHERE id = :id")
+    suspend fun setInvestigationMode(id: Long, skip: Boolean, quick: Boolean, now: Long)
+
+    /** 更新法定截止时间（快捷路径：事故发生 + 10 个工作日，v1.74） */
+    @Query("UPDATE cases SET deadline = :deadline, updated_at = :now WHERE id = :id")
+    suspend fun updateDeadline(id: Long, deadline: Long, now: Long)
+
     @Query("SELECT COUNT(*) FROM cases WHERE status = :status")
     fun countByStatus(status: String): Flow<Int>
 

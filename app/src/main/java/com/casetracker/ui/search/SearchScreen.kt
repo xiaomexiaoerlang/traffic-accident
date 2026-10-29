@@ -35,6 +35,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.casetracker.domain.model.Case
 import com.casetracker.domain.model.CaseStatus
+import com.casetracker.domain.model.CaseType
+import com.casetracker.domain.model.FormatUtils
 import com.casetracker.theme.DangerColor
 import com.casetracker.ui.components.MiuiCard
 import com.casetracker.ui.components.MiuiTopAppBar
@@ -107,6 +109,8 @@ fun SearchScreen(
                         SearchResultCard(
                             case = case,
                             dateFormat = dateFormat,
+                            isRegistered = if (case.caseType == CaseType.ACCIDENT) true
+                                           else case.id in uiState.violationRegisteredCaseIds,
                             onClick = { onOpenCase(case.id) }
                         )
                     }
@@ -120,10 +124,17 @@ fun SearchScreen(
 private fun SearchResultCard(
     case: Case,
     dateFormat: SimpleDateFormat,
+    isRegistered: Boolean,
     onClick: () -> Unit
 ) {
     val now = System.currentTimeMillis()
     val isOverdue = case.isOverdue(now)
+    // 状态跟随流程：已认定 / 处理中（已完成受案登记）/ 待受案
+    val statusText = when {
+        case.status == CaseStatus.CLOSED -> "已认定"
+        isRegistered -> "处理中"
+        else -> "待受案"
+    }
 
     MiuiCard(
         modifier = Modifier.clickable(onClick = onClick)
@@ -145,14 +156,14 @@ private fun SearchResultCard(
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = case.status.displayName,
+                text = statusText,
                 style = MaterialTheme.typography.labelMedium,
                 color = if (isOverdue) DangerColor else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = case.title,
+            text = FormatUtils.unifiedTitle(case),
             style = MaterialTheme.typography.titleMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
