@@ -11,6 +11,39 @@ data class VersionLog(
 
 val VERSION_LOGS: List<VersionLog> = listOf(
     VersionLog(
+        version = "v1.90.8",
+        date = "2026-11-01",
+        items = listOf(
+            "底栏拖动跟手修复：拖拽手势从液滴小区域移到整条玻璃底栏，任意位置左右滑动液滴实时跟手（c001apk 同款交互）",
+            "点击 vs 拖动自动区分：轻点切 Tab、滑动进拖拽；松手吸附最近 Tab 切页，取消回 Pager 驱动",
+            "保留：Pager 滑动联动/按压 0.9 回弹/AGSL 三层玻璃/API 降级",
+            "版本 1.90.7 → 1.90.8（versionCode 48，覆盖安装不丢数据）"
+        )
+    ),
+    VersionLog(
+        version = "v1.90.7",
+        date = "2026-10-30",
+        items = listOf(
+            "Tab 滑动跟手修复：指示器位移下沉到 offset 布局期读取（只 relayout 液滴，跳过重组），GPU 逐帧跟随",
+            "Tab 高亮优化：scale 走 graphicsLayer 绘制期（只更新 layer），颜色渐变重组范围仅单个 Tab，玻璃管线不再每帧重跑",
+            "副本层 effects 固定 lens 参数（去掉 press 联动），切换脉冲不再重跑全宽玻璃管线",
+            "保留：三层玻璃结构/液滴拖拽/Tab 按压 0.9 回弹 + ripple/API 降级/FAB 拖拽/崩溃防御",
+            "版本 1.90.6 → 1.90.7（versionCode 48，覆盖安装不丢数据）"
+        )
+    ),
+    VersionLog(
+        version = "v1.90.6",
+        date = "2026-10-29",
+        items = listOf(
+            "底栏指示器与 HorizontalPager 实时联动：液滴位置 = (currentPage + currentPageOffsetFraction) × tabWidth，滑动跟手无延迟（LiquidGlassBottomBarV3）",
+            "Tab 按压动画：按压 scale→0.9 + spring(DampingRatioMediumBouncy) 回弹 + 水波纹 ripple；选中按活跃度平滑放大 1.12× + 颜色渐变（灰→白）",
+            "液滴拖拽保留：拖拽中覆盖跟手值、松手吸附最近 Tab，回到 Pager 驱动",
+            "切换脉冲：currentPage 变化时液滴放大 78/56 + 折射增强后回落",
+            "不回归：三层玻璃结构（blur+vibrancy+lens 防御/白色副本/透明透镜无蓝色）、API 降级、FAB 拖拽、崩溃防御",
+            "版本 1.90.5 → 1.90.6（versionCode 48，覆盖安装不丢数据）"
+        )
+    ),
+    VersionLog(
         version = "v1.90.5",
         date = "2026-10-29",
         items = listOf(

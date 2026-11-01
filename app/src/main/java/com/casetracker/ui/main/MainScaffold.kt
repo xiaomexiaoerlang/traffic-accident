@@ -28,7 +28,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.casetracker.ui.accident.AccidentScreen
-import com.casetracker.ui.components.LiquidGlassBottomBarV2
+import com.casetracker.ui.components.LiquidGlassBottomBarV3
 import com.casetracker.ui.components.NavItem
 import com.casetracker.ui.home.HomeScreen
 import com.casetracker.ui.law.LawLibraryScreen
@@ -141,9 +141,9 @@ fun MainScaffold(
             }
         }
 
-        // 底部导航：液态玻璃悬浮胶囊 V2（v1.90.4 对齐 KernelSU 三层结构：全宽玻璃条 + 白色副本层 + 透明透镜液滴）
-        LiquidGlassBottomBarV2(
-            selectedIndex = pagerState.currentPage,
+        // 底部导航：液态玻璃悬浮胶囊 V3（v1.90.6：指示器与 Pager 实时联动跟手 + Tab 按压动画）
+        LiquidGlassBottomBarV3(
+            pagerState = pagerState,
             onItemSelected = { index ->
                 scope.launch { pagerState.animateScrollToPage(index) }
             },
